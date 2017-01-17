@@ -37,7 +37,9 @@ subtest 'set() and get()' => sub {
 
     subtest 'overwrites with given value' => sub {
 
-        lives_ok { $cache->set(hoge => 222) };
+        lives_ok {
+            $cache->set(hoge => 222);
+        };
 
         subtest 'gets stored value' => sub {
             is $cache->get('hoge'), 222;
@@ -97,20 +99,26 @@ subtest 'Least recently used key expires' => sub {
         };
     };
 
-    subtest 'When new key "buz" is set' => sub {
+    subtest 'When fuga is updated, and new key "buz" is set' => sub {
 
-        lives_ok { $cache->set(buz => 555) };
+        lives_ok {
+            $cache->set(fuga => 2222);
+        };
+
+        lives_ok {
+            $cache->set(buz => 555);
+        };
 
         subtest 'current_size is 3' => sub {
             is $cache->current_size, 3;
         };
 
-        subtest 'key "hoge" still exists' => sub {
-            is $cache->get('hoge'), 111;
+        subtest 'key "bar" expires' => sub {
+            is $cache->get('bar'), undef;
         };
 
-        subtest 'key "fuga" is expires' => sub {
-            is $cache->get('fuga'), undef;
+        subtest 'key "fuga" is updated' => sub {
+            is $cache->get('fuga'), 2222;
         };
     };
 };
