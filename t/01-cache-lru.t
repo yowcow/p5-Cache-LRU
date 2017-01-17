@@ -26,12 +26,23 @@ subtest 'set() and get()' => sub {
     my $cache = Cache::LRU->new;
 
     subtest 'stores given value' => sub {
+
         lives_ok { $cache->set(hoge => 111) };
+
+        subtest 'gets stored value' => sub {
+            is $cache->get('hoge'), 111;
+            is $cache->current_size, 1;
+        };
     };
 
-    subtest 'gets stored value' => sub {
-        is $cache->get('hoge'), 111;
-        is $cache->current_size, 1;
+    subtest 'overwrites with given value' => sub {
+
+        lives_ok { $cache->set(hoge => 222) };
+
+        subtest 'gets stored value' => sub {
+            is $cache->get('hoge'), 222;
+            is $cache->current_size, 1;
+        };
     };
 };
 
