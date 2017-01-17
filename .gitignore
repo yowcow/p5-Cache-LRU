@@ -1,3 +1,2 @@
-cpanfile.snapshot
-lib/*
-local/
+/cpanfile.snapshot
+/local/
