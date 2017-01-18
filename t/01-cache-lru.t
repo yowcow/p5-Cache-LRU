@@ -48,6 +48,21 @@ subtest 'set() and get()' => sub {
     };
 };
 
+subtest 'Keys are stored up to 1' => sub {
+    my $cache = Cache::LRU->new(max_size => 1);
+
+    $cache->set(hoge => 111);
+    $cache->set(fuga => 222);
+
+    subtest 'key "fuga" exists' => sub {
+        is $cache->get('fuga'), 222;
+    };
+
+    subtest 'key "hoge" is expired' => sub {
+        is $cache->get('hoge'), undef;
+    };
+};
+
 subtest 'Keys are stored up to 3' => sub {
     my $cache = Cache::LRU->new;
 
