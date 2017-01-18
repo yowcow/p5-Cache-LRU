@@ -1,4 +1,5 @@
-use common::sense;
+use strict;
+use warnings;
 use Test::More;
 
 use_ok 'Cache::LRU';
