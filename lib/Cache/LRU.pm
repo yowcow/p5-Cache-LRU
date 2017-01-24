@@ -26,22 +26,6 @@ sub current_size {
     shift->{size};
 }
 
-sub _remove_lru {
-    my $self = shift;
-    if (my $first = $self->{nodes}{_first}) {
-        if (!defined $first->{_prev} && !defined $first->{_next}) {    # The only node exists
-            $self->{nodes}{_first} = $self->{nodes}{_last} = undef;
-        }
-        else {                                                         # Multiple nodes exist
-            my $next = $first->{_next};
-            $next->{_prev} = undef;
-            $self->{nodes}{_first} = $next;
-        }
-
-        delete $self->{keys}{ $first->{key} };
-    }
-}
-
 sub set {
     my ($self, $key, $value) = @_;
 
@@ -67,8 +51,7 @@ sub set {
     }
     else {    # The last node
         if ($self->{size} >= $self->max_size) {
-            $self->_remove_lru;
-            $self->{size}--;
+            $self->remove($self->{nodes}{_first}{key});
         }
 
         my $node = {
@@ -131,6 +114,34 @@ sub get {
     $self->render_state if $VERBOSE;
 
     $node->{value};
+}
+
+sub remove {
+    my ($self, $key) = @_;
+    my $node = $self->{keys}{$key} or return;
+    my ($prev, $next);
+
+    if (($next = $node->{_next}) && ($prev = $node->{_prev})) {    # In the middle
+        $next->{_prev} = $prev;
+        $prev->{_next} = $next;
+    }
+    elsif ($next = $node->{_next}) {                               # First
+        $self->{nodes}{_first} = $next;
+        $next->{_prev} = undef;
+    }
+    elsif ($prev = $node->{_prev}) {                               # Last
+        $self->{nodes}{_last} = $prev;
+        $prev->{_next} = undef;
+    }
+    else {                                                         # The only one
+        $self->{nodes}{_first} = undef;
+        $self->{nodes}{_last}  = undef;
+    }
+
+    delete $self->{keys}{$key};
+    $self->{size}--;
+
+    $self->render_state if $VERBOSE;
 }
 
 sub render_state {

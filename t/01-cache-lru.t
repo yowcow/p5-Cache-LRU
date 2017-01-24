@@ -138,4 +138,60 @@ subtest 'Least recently used key expires' => sub {
     };
 };
 
+subtest 'Any key can be removed' => sub {
+    my $cache = Cache::LRU->new;
+
+    $cache->set(hoge => 111);
+    $cache->set(fuga => 222);
+    $cache->set(fooo => 333);
+
+    subtest 'Remove key "fuga"' => sub {
+
+        lives_ok { $cache->remove('fuga') };
+
+        subtest 'current_size is 2' => sub {
+            is $cache->current_size, 2;
+        };
+
+        subtest 'key "fuga" is expired' => sub {
+            is $cache->get('fuga'), undef;
+        };
+
+        subtest 'key "hoge" and "fooo" exist' => sub {
+            is $cache->get('hoge'), 111;
+            is $cache->get('fooo'), 333;
+        };
+    };
+
+    subtest 'Remove key "fooo"' => sub {
+
+        lives_ok { $cache->remove('fooo') };
+
+        subtest 'current_size is 1' => sub {
+            is $cache->current_size, 1;
+        };
+
+        subtest 'key "fooo" is expired' => sub {
+            is $cache->get('fooo'), undef;
+        };
+
+        subtest 'key "hoge" exists' => sub {
+            is $cache->get('hoge'), 111;
+        };
+    };
+
+    subtest 'Remove key "hoge"' => sub {
+
+        lives_ok { $cache->remove('hoge') };
+
+        subtest 'current_size is 0' => sub {
+            is $cache->current_size, 0;
+        };
+
+        subtest 'key "hoge" is expired' => sub {
+            is $cache->get('hoge'), undef;
+        };
+    };
+};
+
 done_testing;
