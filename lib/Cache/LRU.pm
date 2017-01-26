@@ -28,12 +28,13 @@ sub current_size {
 
 sub set {
     my ($self, $key, $value) = @_;
+    my $node;
 
-    if (my $current = $self->{keys}{$key}) {
-        $current->{value} = $value;
+    if ($node = $self->{keys}{$key}) {
+        $node->{value} = $value;
 
-        if (my $next = $current->{_next}) {    # Not the last node
-            if (my $prev = $current->{_prev}) {
+        if (my $next = $node->{_next}) {    # Not the last node
+            if (my $prev = $node->{_prev}) {
                 $next->{_prev} = $prev;
                 $prev->{_next} = $next;
             }
@@ -43,10 +44,10 @@ sub set {
             }
 
             my $last = $self->{nodes}{_last};
-            $last->{_next}        = $current;
-            $current->{_prev}     = $last;
-            $current->{_next}     = undef;
-            $self->{nodes}{_last} = $current;
+            $last->{_next}        = $node;
+            $node->{_prev}        = $last;
+            $node->{_next}        = undef;
+            $self->{nodes}{_last} = $node;
         }
     }
     else {    # The last node
@@ -54,7 +55,7 @@ sub set {
             $self->remove($self->{nodes}{_first}{key});
         }
 
-        my $node = {
+        $node = {
             key   => $key,
             value => $value,
             _prev => undef,
