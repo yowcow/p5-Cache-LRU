@@ -9,7 +9,7 @@ sub new {
     my ($class, %args) = @_;
     bless {
         max_size => $args{max_size} || 3,
-        nodes => {
+        node => {
             _first => undef,
             _last  => undef,
         },
@@ -40,19 +40,19 @@ sub set {
             }
             else {
                 $next->{_prev} = undef;
-                $self->{nodes}{_first} = $next;
+                $self->{node}{_first} = $next;
             }
 
-            my $last = $self->{nodes}{_last};
-            $last->{_next}        = $node;
-            $node->{_prev}        = $last;
-            $node->{_next}        = undef;
-            $self->{nodes}{_last} = $node;
+            my $last = $self->{node}{_last};
+            $last->{_next}       = $node;
+            $node->{_prev}       = $last;
+            $node->{_next}       = undef;
+            $self->{node}{_last} = $node;
         }
     }
     else {    # The last node
         if ($self->{size} >= $self->max_size) {
-            $self->remove($self->{nodes}{_first}{key});
+            $self->remove($self->{node}{_first}{key});
         }
 
         $node = {
@@ -63,19 +63,19 @@ sub set {
         };
 
         HANDLE_FIRST_NODE: {
-            if (!defined $self->{nodes}{_first}) {
-                $self->{nodes}{_first} = $node;
+            if (!defined $self->{node}{_first}) {
+                $self->{node}{_first} = $node;
             }
         }
 
         HANDLE_LAST_NODE: {
-            if (my $last = $self->{nodes}{_last}) {
-                $last->{_next}        = $node;
-                $node->{_prev}        = $last;
-                $self->{nodes}{_last} = $node;
+            if (my $last = $self->{node}{_last}) {
+                $last->{_next}       = $node;
+                $node->{_prev}       = $last;
+                $self->{node}{_last} = $node;
             }
 
-            $self->{nodes}{_last} = $node;
+            $self->{node}{_last} = $node;
         }
 
         $self->{keys}{$key} = $node;
@@ -95,21 +95,21 @@ sub get {
             $prev->{_next} = $next;
             $node->{_next} = undef;
 
-            my $last = $self->{nodes}{_last};
+            my $last = $self->{node}{_last};
             $last->{_next} = $node;
             $node->{_prev} = $last;
         }
         else {                              # The first node
-            $next->{_prev}         = undef;
-            $node->{_next}         = undef;
-            $self->{nodes}{_first} = $next;
+            $next->{_prev}        = undef;
+            $node->{_next}        = undef;
+            $self->{node}{_first} = $next;
 
-            my $last = $self->{nodes}{_last};
+            my $last = $self->{node}{_last};
             $last->{_next} = $node;
             $node->{_prev} = $last;
         }
 
-        $self->{nodes}{_last} = $node;
+        $self->{node}{_last} = $node;
     }
 
     $self->render_state if $VERBOSE;
@@ -127,16 +127,16 @@ sub remove {
         $prev->{_next} = $next;
     }
     elsif ($next = $node->{_next}) {                               # First
-        $self->{nodes}{_first} = $next;
+        $self->{node}{_first} = $next;
         $next->{_prev} = undef;
     }
     elsif ($prev = $node->{_prev}) {                               # Last
-        $self->{nodes}{_last} = $prev;
+        $self->{node}{_last} = $prev;
         $prev->{_next} = undef;
     }
     else {                                                         # The only one
-        $self->{nodes}{_first} = undef;
-        $self->{nodes}{_last}  = undef;
+        $self->{node}{_first} = undef;
+        $self->{node}{_last}  = undef;
     }
 
     delete $self->{keys}{$key};
@@ -153,27 +153,27 @@ sub render_state {
     say "=> Cache keys: " . join(',', keys %{ $self->{keys} });
 
     NODES_ASC: {
-        my @nodes;
-        my $node = $self->{nodes}{_first};
+        print "=> Nodes (ASC):  ";
 
+        my $node = $self->{node}{_first};
         while ($node) {
-            push @nodes, join(':', $node->{key}, $node->{value});
+            print join(':', $node->{key}, $node->{value}) . ' -> ';
             $node = $node->{_next};
         }
 
-        say "=> Cache nodes (ASC):  " . join(' -> ', @nodes);
+        print "\n";
     }
 
     NODES_DESC: {
-        my @nodes;
-        my $node = $self->{nodes}{_last};
+        print "=> Nodes (DESC): ";
 
+        my $node = $self->{node}{_last};
         while ($node) {
-            push @nodes, join(':', $node->{key}, $node->{value});
+            print join(':', $node->{key}, $node->{value}) . ' <- ';
             $node = $node->{_prev};
         }
 
-        say "=> Cache nodes (DESC): " . join(' <- ', @nodes);
+        print "\n";
     }
 
     say "*****************************";
